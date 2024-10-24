@@ -96,7 +96,8 @@ show_main_menu() {
     "15 | FireMotD"               "Upgrade the program behind the system overview on SSH login" \
     "16 | Samba"                  "Install the Samba file sharing service and set up openHAB shares" \
     3>&1 1>&2 2>&3)
-    if [ $? -eq 1 ] || [ $? -eq 255 ]; then return 0; fi
+    RET=$?
+    if [ $RET -eq 1 ] || [ $RET -eq 255 ]; then return 0; fi
     wait_for_apt_to_finish_update
     case "$choice2" in
       11\ *) basic_packages && needed_packages ;;
@@ -132,7 +133,8 @@ show_main_menu() {
     "   | Remove EVCC"            "Uninstall EVCC" \
     "   | Setup EVCC"             "Setup EVCC from command line (German only)" \
     3>&1 1>&2 2>&3)
-    if [ $? -eq 1 ] || [ $? -eq 255 ]; then return 0; fi
+    RET=$?
+    if [ $RET -eq 1 ] || [ $RET -eq 255 ]; then return 0; fi
     wait_for_apt_to_finish_update
     case "$choice2" in
       21\ *) frontail_setup;;
@@ -179,7 +181,8 @@ show_main_menu() {
     "   | Remove WireGuard"       "Remove WireGuard VPN from this system" \
     "3C | Setup UPS (nut)"        "Setup a Uninterruptable Power Supply for this system using Network UPS Tools" \
     3>&1 1>&2 2>&3)
-    if [ $? -eq 1 ] || [ $? -eq 255 ]; then return 0; fi
+    RET=$?
+    if [ $RET -eq 1 ] || [ $RET -eq 255 ]; then return 0; fi
     wait_for_apt_to_finish_update
     case "$choice2" in
       31\ *) hostname_change ;;
@@ -216,13 +219,15 @@ show_main_menu() {
     "   | OpenJDK 11"                     "Install and activate OpenJDK 11 as Java provider" \
     "   | Zulu 11 OpenJDK 32-bit"         "Install Zulu 11 32-bit OpenJDK as Java provider" \
     "   | Zulu 11 OpenJDK 64-bit"         "Install Zulu 11 64-bit OpenJDK as Java provider" \
-    "   | Zulu 21 OpenJDK 64-bit"         "Install Zulu 21 64-bit OpenJDK (EXPERIMENTAL)" \
+    "   | Zulu 21 OpenJDK 64-bit"         "Install Zulu 21 64-bit OpenJDK as Java provider" \
+    "   | BellSoft Liberica JDK 21"       "Install BellSoft Liberica JDK 21, supports 32bit RPi (EXPERIMENTAL)" \
     "47 | Install openhab-js"             "JS Scripting: Upgrade to latest version of openHAB JavaScript library (advanced)" \
     "   | Uninstall openhab-js"           "JS Scripting: Switch back to included version of openHAB JavaScript library" \
     "48 | Install openhab_rules_tools"    "JS Scripting: Manually install openhab_rules_tools (auto-installed)" \
     "   | Uninstall openhab_rules_tools"  "JS Scripting: Uninstall openhab_rules_tools" \
     3>&1 1>&2 2>&3)
-    if [ $? -eq 1 ] || [ $? -eq 255 ]; then return 0; fi
+    RET=$?
+    if [ $RET -eq 1 ] || [ $RET -eq 255 ]; then return 0; fi
     wait_for_apt_to_finish_update
     version="$(openhab4_is_installed && echo "openHAB" || (openhab3_is_installed && echo "openHAB3") || echo "openHAB2")"
     # shellcheck disable=SC2154
@@ -239,6 +244,7 @@ show_main_menu() {
       *Zulu\ 11\ OpenJDK\ 32-bit) update_config_java "Zulu11-32" && java_install_or_update "Zulu11-32";;
       *Zulu\ 11\ OpenJDK\ 64-bit) update_config_java "Zulu11-64" && java_install_or_update "Zulu11-64";;
       *Zulu\ 21\ OpenJDK\ 64-bit) update_config_java "Zulu21-64" && java_install_or_update "Zulu21-64";;
+      *BellSoft\ Liberica\ JDK\ 21) update_config_java "BellSoft21" && java_install_or_update "BellSoft21";;
       47\ *) jsscripting_npm_install "openhab";;
       *Uninstall\ openhab-js) jsscripting_npm_install "openhab" "uninstall";;
       48\ *) jsscripting_npm_install "openhab_rules_tools";;
@@ -258,7 +264,8 @@ show_main_menu() {
     "54 | Raw copy SD"                "Raw copy internal SD to external disk / SD card" \
     "55 | Sync SD"                    "Rsync internal SD to external disk / SD card" \
     3>&1 1>&2 2>&3)
-    if [ $? -eq 1 ] || [ $? -eq 255 ]; then return 0; fi
+    RET=$?
+    if [ $RET -eq 1 ] || [ $RET -eq 255 ]; then return 0; fi
     case "$choice2" in
       50\ *) backup_openhab_config ;;
       51\ *) restore_openhab_config ;;
@@ -276,5 +283,6 @@ show_main_menu() {
   fi
 
   # shellcheck disable=SC2154,SC2181
-  if [ $? -ne 0 ]; then whiptail --msgbox "There was an error or interruption during the execution of:\\n  \"$choice\"\\n\\nPlease try again. If the error persists, please read /opt/openhabian/docs/openhabian-DEBUG.md or https://github.com/openhab/openhabian/blob/main/docs/openhabian-DEBUG.md how to proceed." 14 80; return 0; fi
+  RET=$?
+  if [ $RET -ne 0 ]; then whiptail --msgbox "There was an error or interruption during the execution of:\\n  \"$choice\"\\n\\nPlease try again. If the error persists, please read /opt/openhabian/docs/openhabian-DEBUG.md or https://github.com/openhab/openhabian/blob/main/docs/openhabian-DEBUG.md how to proceed." 14 80; return 0; fi
 }

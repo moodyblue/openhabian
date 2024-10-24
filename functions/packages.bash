@@ -220,17 +220,17 @@ homegear_setup() {
 
   if ! add_keys "https://apt.homegear.eu/Release.key" "$keyName"; then return 1; fi
 
-  # need to use testing repo to get v0.8
-  # repo https://apt.homegear.eu/raspberry_pi_os/bookworm/homegear/{testing,stable}/dists/bookworm/
-  echo "deb [signed-by=/usr/share/keyrings/${keyName}.gpg] https://apt.homegear.eu/${myOS,,}/${myRelease,,}/homegear/testing ${myRelease,,} main" > /etc/apt/sources.list.d/homegear.list
 
+  # Add Homegear's repository to APT - need to use testing repo
+  if ! is_pi || [[ "$(dpkg --print-architecture)" == 'arm64' ]]; then
+    # 64-bit Raspberry Pi OS:
+    echo 'deb [signed-by=/usr/share/keyrings/homegear-archive-keyring.gpg] https://apt.homegear.eu/debian/bookworm/homegear/testing/ bookworm main' > /etc/apt/sources.list.d/homegear.list
+  else
+    # 32-bit Raspberry Pi OS
+    echo 'deb [signed-by=/usr/share/keyrings/homegear-archive-keyring.gpg] https://apt.homegear.eu/raspberry_pi_os/bookworm/homegear/testing/ bookworm main' > /etc/apt/sources.list.d/homegear.list
+  fi
   echo -n "$(timestamp) [openHABian] Installing Homegear... "
   if ! cond_redirect apt-get update; then echo "FAILED (update apt lists)"; return 1; fi
-  if is_raspios; then
-    wget -O "$temp" https://github.com/WiringPi/WiringPi/releases/download/2.61-1/wiringpi-2.61-1-armhf.deb
-    dpkg -i "$temp"
-    rm -f "$temp"
-  fi
   if cond_redirect apt-get install --yes -o DPkg::Lock::Timeout="$APTTIMEOUT" homegear homegear-homematicbidcos homegear-homematicwired homegear-max homegear-management; then echo "OK"; else echo "FAILED"; return 1; fi
   echo -n "$(timestamp) [openHABian] Setting up Homegear user account permissions... "
   if ! cond_redirect adduser "${username:-openhabian}" homegear; then echo "FAILED"; return 1; fi
@@ -444,7 +444,7 @@ miflora_setup() {
   cond_echo "Preparing python virtual enviroment"
   cond_redirect python -m venv --system-site-packages "$mifloraDir"/env
   cond_redirect source "$mifloraDir"/env/bin/activate
-## original code from here  
+## original code from here
   cond_echo "Installing required python packages"
   cond_redirect "$mifloraDir"/env/bin/pip3 install -r "$mifloraDir"/requirements.txt
 ## deactivate venv to avoid conflicts with other functions
@@ -598,7 +598,7 @@ nginx_setup() {
 
   # use Tailscale resolver if up
   ping -c 3 100.100.100.100 && uncomment "#VPN" /etc/nginx/sites-enabled/openhab
-  
+
   if [[ $auth == "true" ]]; then
     echo -n "$(timestamp) [openHABian] Installing nginx password utilities... "
     if cond_redirect apt-get install --yes -o DPkg::Lock::Timeout="$APTTIMEOUT" apache2-utils; then echo "OK"; else echo "FAILED"; return 1; fi
@@ -798,4 +798,3 @@ setup_evcc() {
   echo -n "$(timestamp) [openHABian] Created EVCC config, restarting ... "
   if cond_redirect systemctl restart evcc.service; then echo "OK"; else echo "FAILED"; fi
 }
-
